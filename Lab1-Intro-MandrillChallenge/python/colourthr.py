@@ -9,12 +9,12 @@ import cv2
 import numpy as np
 
 # Read image from file
-image = cv2.imread("mandrillRGB.jpg", 1)
+image = cv2.imread("../images/mandrillRGB.jpg", 1)
 
 # Threshold by looping through all pixels
-th = 200
-Blue = image[:,:,0]
-image[:,:,0] = (Blue > th)*255
+th = 200 # Threshold set at 200
+Blue = image[:,:,1] # go through all the elemtns along that dimension, for the 
+image[:,:,0] = (Blue > th)*255 # the ":" refers to all of the elements along the particular dimension
 image[:,:,1] = (Blue > th)*255
 image[:,:,2] = (Blue > th)*255
 

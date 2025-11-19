@@ -29,3 +29,11 @@ image = cv2.circle(image, (150, 160), 5, (0, 255, 0), 2)
 
 # save image to file
 cv2.imwrite("myimage.jpg", image)
+
+namedWindow = 'Display Window'
+
+cv2.imshow(namedWindow, image)
+
+cv2.waitKey(0)
+
+cv2.destroyAllWindows()

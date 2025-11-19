@@ -69,7 +69,7 @@ def GaussianBlur(input, size):
 	return blurredOutput
 
 # ==== MAIN ==============================================
-imageName = args.name
+imageName = "../images/mandrill.jpg"
 
 # ignore if no such file is present.
 if not os.path.isfile(imageName):

@@ -20,7 +20,7 @@ for y in range(0, image.shape[0]):  # go through all rows (or scanlines)
 	for x in range(0, image.shape[1]):  # go through all columns
 		image[y, x, 0] = x # set blue component
 		image[y, x, 1] = y # set green component  
-		image[y, x, 2] = 255 - image[y, x,1] # set red component
+		image[y, x, 2] = 255 - image[y, x,0] # set red component
 
 # construct a window for image display
 namedWindow = 'Display window'
