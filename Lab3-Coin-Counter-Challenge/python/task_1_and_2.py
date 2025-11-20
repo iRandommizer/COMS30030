@@ -31,6 +31,7 @@ def check_bounds(input_img, x, y):
 # The function is suppose to find edges(usring the sharp brightness changes) in an image by detecting gradients
 def sobel_operation(input_img, mapping_loc_array):
     ref = input_img.copy()
+    # array for x gradient vectors and y gradient vectors
     G_x = np.zeros_like(input_img, dtype=float)
     G_y = np.zeros_like(input_img, dtype=float)
     
@@ -67,29 +68,30 @@ def sobel_operation(input_img, mapping_loc_array):
             G_x[y, x] = cur_processed_val_x
             G_y[y, x] = cur_processed_val_y
     
+
     # Calculate magnitude
     magnitude = np.sqrt(G_x**2 + G_y**2)
 
-    # Normalise the magnitude (its basically percentage * 255), eg. 50% * 255 = 123
-    magnitude = (magnitude - magnitude.min())/(magnitude.max() - magnitude.min())*255
+    # Calculate direction of gradient, I understand in the slides, they dont ask us to use arctan2 but 
+    # in game dev, we use arctan2 instead of arctan so that we get the full range of direction (-180 to 180)
+    # instead of just (-90 to 90)
+    G_dir = np.arctan2(G_y,G_x) 
 
-    input_img[:,:] = magnitude.astype(np.uint8)
-    return G_x, G_y
+    return G_x,G_y,magnitude, G_dir
+
+def data_to_image(data):
+    data = np.abs(data)
+    noramlised_data = (data - data.min())/(data.max() - data.min())*255
+    return noramlised_data.astype(np.uint8)
 
 def threshold_image(input_image, threshold_val):
     # for np.where: NumPy automatically broadcasts the single value to compare against every pixel
     input_image[:,:] = np.where(input_image > threshold_val, 255, 0)
 
-
-G_x, G_y = sobel_operation(image1, create_loc_mapping(3))
-threshold_image(image1, 50)
-
-cv2.imshow("Edges", image1)
-cv2.waitKey(0)
-cv2.destroyAllWindows()
-
-
 def hough_transform_circle_detection(input_img, g_x, g_y, peak_threshold, min_radius, max_radius):
+    # Input:
+    # - Input image of "Thresholded" magnitude image
+    # - Gradient image
     r, c = input_img.shape
     # Create your accumilator space
     # For every row
@@ -97,7 +99,8 @@ def hough_transform_circle_detection(input_img, g_x, g_y, peak_threshold, min_ra
         # For every col
         for col in range(c):
             # Check if pixel value >= 0
-            if input_img[]
+            if input_img[row, col] > 0:
+
                 # Get gradient ang
                 # Draw circle within the accumilato space relative from that pixel value position?
                     # When drawing, get the current accumilator space to be drawn on and add 1 to it,
@@ -105,3 +108,19 @@ def hough_transform_circle_detection(input_img, g_x, g_y, peak_threshold, min_ra
     # Once all circles are drawn in accumilator space, "bin" your pixel space and for each bin,
     # see those with the max value, and add to list
     # Count total in the list, that's how many circles there are?
+
+
+G_x, G_y, magnitude, G_dir = sobel_operation(image1, create_loc_mapping(3))
+G_x_img = data_to_image(G_x)
+G_y_img = data_to_image(G_y)
+G_dir_img = data_to_image(G_dir)
+magnitude_img = data_to_image(magnitude)
+threshold_image(magnitude_img, 50)
+
+cv2.imshow("G_x", G_x_img)
+cv2.imshow("G_y", G_y_img)
+cv2.imshow("magnitude", magnitude_img)
+cv2.imshow("G_dir", G_dir_img)
+cv2.waitKey(0)
+cv2.destroyAllWindows()
+
