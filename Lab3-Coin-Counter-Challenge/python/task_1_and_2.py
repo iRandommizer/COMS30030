@@ -1,9 +1,9 @@
 import cv2 
 import numpy as np
 
-image1 = cv2.imread("../images/coins1.png", 0)
+image1 = cv2.imread("../images/coins3.png", 0)
 # We need the output image to be BGR so our circles has colours
-output_img = cv2.cvtColor("../images/coins1.png", cv2.COLOR_GRAY2BGR)
+output_img = cv2.cvtColor(image1, cv2.COLOR_GRAY2BGR)
 
 
 # Detects vertical edges
@@ -145,7 +145,10 @@ def hough_transform_circle_detection(input_img, gradient_img, peak_threshold, mi
 
 def draw_deteccted_circles(input_img, circles):
     for x,y,r in circles:
-        
+        center = (x,y)
+        cv2.circle(input_img, center, r, (0,255,0), 2)
+    return input_img
+
 
 G_x, G_y, magnitude, G_dir = sobel_operation(image1, create_loc_mapping(3))
 G_x_img = data_to_image(G_x)
@@ -153,13 +156,15 @@ G_y_img = data_to_image(G_y)
 G_dir_img = data_to_image(G_dir)
 magnitude_img = data_to_image(magnitude)
 threshold_image(magnitude_img, 50)
-circles, hough_space = hough_transform_circle_detection(magnitude_img, G_dir, 50, 35, 55)
+circles, hough_space = hough_transform_circle_detection(magnitude_img, G_dir, 10, 10, 80)
+circled_image = draw_deteccted_circles(output_img,circles)
 
 cv2.imshow("G_x", G_x_img)
 cv2.imshow("G_y", G_y_img)
 cv2.imshow("magnitude", magnitude_img)
 cv2.imshow("G_dir", G_dir_img)
 cv2.imshow("Hough Space", hough_space)
+cv2.imshow("Detected Images", circled_image)
 cv2.waitKey(0)
 cv2.destroyAllWindows()
 
