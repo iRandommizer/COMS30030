@@ -2,6 +2,9 @@ import cv2
 import numpy as np
 
 image1 = cv2.imread("../images/coins1.png", 0)
+# We need the output image to be BGR so our circles has colours
+output_img = cv2.cvtColor("../images/coins1.png", cv2.COLOR_GRAY2BGR)
+
 
 # Detects vertical edges
 sobel_x = np.array([[-1,0,1],
@@ -88,27 +91,60 @@ def threshold_image(input_image, threshold_val):
     # for np.where: NumPy automatically broadcasts the single value to compare against every pixel
     input_image[:,:] = np.where(input_image > threshold_val, 255, 0)
 
-def hough_transform_circle_detection(input_img, g_x, g_y, peak_threshold, min_radius, max_radius):
+def hough_transform_circle_detection(input_img, gradient_img, peak_threshold, min_radius, max_radius):
     # Input:
     # - Input image of "Thresholded" magnitude image
-    # - Gradient image
+    # - Gradient image, need to use the raw gradient values, instead of the normalised one
+    # - Hough Transform Peak Threshold
+    # - Min Radius
+    # - Max Radius
     r, c = input_img.shape
+    radius_range = max_radius - min_radius + 1 # we add +1 to ensure that the max radius is included 
+    accumalator = np.zeros((r,c,radius_range))
     # Create your accumilator space
     # For every row
     for row in range(r):
         # For every col
         for col in range(c):
-            # Check if pixel value >= 0
+            # Check if pixel value > 0
             if input_img[row, col] > 0:
+                theta = gradient_img[row, col]
+                # Based on gradient direction, find a & b
+                for r in range(min_radius, max_radius+1):
+                    a_p = int(round(col + r * np.cos(theta))) # Need to round up to int
+                    b_p = int(round(row + r * np.sin(theta)))
+                    a_n = int(round(col - r * np.cos(theta)))
+                    b_n = int(round(row - r * np.sin(theta)))
+                    # Check if both points are within the image space bounds, if within image space,
+                    # accumalte in hough space
+                    if check_bounds(input_img, a_p, b_p):
+                        accumalator[b_p, a_p, r - min_radius] += 1
+                    if check_bounds(input_img, a_n, b_n):
+                        accumalator[b_n, a_n, r - min_radius] += 1
 
-                # Get gradient ang
-                # Draw circle within the accumilato space relative from that pixel value position?
-                    # When drawing, get the current accumilator space to be drawn on and add 1 to it,
-                    # this allows the pixel value to keep increasing if it keeps being drawn on
-    # Once all circles are drawn in accumilator space, "bin" your pixel space and for each bin,
-    # see those with the max value, and add to list
-    # Count total in the list, that's how many circles there are?
+    # Circle
+    circle_idx = np.where(accumalator > peak_threshold)
+    circles = []
+    for b,a,r_idx in zip(*circle_idx):
+        radius = r_idx + min_radius
+        circles.append((a,b,radius))
 
+    #Hough Space 2D
+    hough_space_2d = np.sum(accumalator, axis=2)
+    hough_space_2d_log = np.log1p(hough_space_2d)
+
+    # Normalize to [0, 1], right now all the accumalator pixels are too bright and barely any contrast with one another
+    hough_norm = (hough_space_2d_log - hough_space_2d_log.min()) / (hough_space_2d_log.max() - hough_space_2d_log.min())
+
+    # Since our values are now normalised from 0 to 1, if we apply the power-law transformation, we supress the lows
+    # and preserve the peaks.
+    # The higher the gamma value, greater the contrast between the lows ad the peaks
+    gamma = 5 
+    hough_gamma = hough_norm ** gamma
+    return circles, hough_gamma
+
+def draw_deteccted_circles(input_img, circles):
+    for 
 
 G_x, G_y, magnitude, G_dir = sobel_operation(image1, create_loc_mapping(3))
 G_x_img = data_to_image(G_x)
@@ -116,11 +152,13 @@ G_y_img = data_to_image(G_y)
 G_dir_img = data_to_image(G_dir)
 magnitude_img = data_to_image(magnitude)
 threshold_image(magnitude_img, 50)
+circles, hough_space = hough_transform_circle_detection(magnitude_img, G_dir, 50, 35, 55)
 
 cv2.imshow("G_x", G_x_img)
 cv2.imshow("G_y", G_y_img)
 cv2.imshow("magnitude", magnitude_img)
 cv2.imshow("G_dir", G_dir_img)
+cv2.imshow("Hough Space", hough_space)
 cv2.waitKey(0)
 cv2.destroyAllWindows()
 
