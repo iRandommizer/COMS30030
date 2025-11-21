@@ -144,7 +144,8 @@ def hough_transform_circle_detection(input_img, gradient_img, peak_threshold, mi
     return circles, hough_gamma
 
 def draw_deteccted_circles(input_img, circles):
-    for 
+    for x,y,r in circles:
+        
 
 G_x, G_y, magnitude, G_dir = sobel_operation(image1, create_loc_mapping(3))
 G_x_img = data_to_image(G_x)
